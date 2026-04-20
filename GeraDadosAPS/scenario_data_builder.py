@@ -13,13 +13,14 @@ class ScenarioDataBuilder():
     def __init__(self, 
                 configuration_data:ConfigurationDataScenario,
                 path_arquivos_data: PathArquivoDados,
-                create_distance_data:bool
+                create_distance_data:bool,
+                code_mun: dict
                 ) -> None:
 
         self.configuration_data = configuration_data
         self.path_arquivos_data = path_arquivos_data
         self.create_distance_data = create_distance_data
-
+        self.code_mun = code_mun
         #Será que vale separar em 3 classes ?
 
 
@@ -75,24 +76,26 @@ class ScenarioDataBuilder():
  
 
     def read_and_format_path_arquivo_setores_censitarios(self):
-        #df = pd.read_excel(self.path_arquivos_data.path_arquivo_setores_censitarios)
         def parse_lat_lon(value):
             s = str(abs(int(value)))          # "1994370594594150"
             integer_part = s[:2]              # "19"
             decimal_part = s[2:]              # "94370594594150"
             return float(f"{integer_part}.{decimal_part}")
 
-        if "Dados_todos_municipios" in self.path_arquivos_data.path_arquivo_setores_censitarios:
-            df = pd.read_excel(self.path_arquivos_data.path_arquivo_setores_censitarios)
-            if self.configuration_data.municipio == 'Divinopolis':
-                df = df[df.MUNICIPIO == "Divinópolis"]
-            else:
-                df = df[df.MUNICIPIO == self.configuration_data.municipio]
-            df["LAT"] = df['LAT'].apply(parse_lat_lon)
-            df["LONG"] = df['LONG'].apply(parse_lat_lon)
-            df = df.rename(columns={"MUNICIPIO": "MUNICIPIO",'Moradores': "V01006", "LAT": "LAT", "LONG": "LONG", "CD_SETOR":"SETOR"})
-            df["SETOR"] =  pd.to_numeric(df["SETOR"], errors="coerce"
-            ) 
+        df = pd.read_csv(self.path_arquivos_data.path_arquivo_setores_censitarios)
+        code_mun = self.code_mun.get(self.configuration_data.municipio)
+        if code_mun is None: #TODO: PORQUE NAO ESTOU FAZENDO ISSO NO INIT ? burrice enorme
+            codigos_cadastrados = list(self.code_mun.keys())
+            raise ValueError(
+                f"Código do município 'self.configuration_data.municipio' não encontrado. "
+                f"Códigos cadastrados: {codigos_cadastrados}"
+            )
+        df = df[df.CD_MUN_RED == code_mun].reset_index()
+        df["LAT"] = df['LAT'].apply(parse_lat_lon)
+        df["LONG"] = df['LONG'].apply(parse_lat_lon)
+        df = df.drop(columns= ["SETOR"])
+        df = df.rename(columns={"MUNICIPIO": "MUNICIPIO", "LAT": "LAT", "LONG": "LONG", "CD_setor_norm":"SETOR"})
+        df["SETOR"] =  pd.to_numeric(df["SETOR"], errors="coerce") 
 
 
         df["V01006"] = df["V01006"].apply(lambda x: 0 if isinstance(x, str) else x)
@@ -101,14 +104,8 @@ class ScenarioDataBuilder():
     
     def read_and_format_path_setores_com_UBS(self):
 
-        #TODO: Dados de UBS nos SC nao esta coerente em divinopolis. Refazer relacao da UBS com setor.
-        DICT_CODE = {"Lagoa Santa": 313760, "Divinopolis": 312230, "Montes Claros": 314330, "Belo Horizonte": 310620, "Contagem": 311860}
-            #Refazendo relacao UBS - setor censitario!
-        path_ubs = r"C:\aps\GeraDadosAPS\Dados\Dados_todos_municipios\v01_UBS.xlsx"
-        df_full = pd.read_excel(path_ubs)
-        cod_mun = DICT_CODE.get(self.configuration_data.municipio)
-        if cod_mun == None:
-            raise ValueError(f"Município '{self.configuration_data.municipio}' não encontrado em DICT_CODE. Municípios disponíveis: {list(DICT_CODE.keys())}")
+        df_full = pd.read_excel(self.path_arquivos_data.path_dados_UBS)
+        cod_mun = self.code_mun.get(self.configuration_data.municipio)
         df_divi = df_full[df_full.CO_MUNICIPIO_GESTOR == cod_mun].reset_index() #Lagoa Santa = 313760, Divinopolis = 312230, Montes Claros = 314330 e BH  - 310620, COntagem = 311860
         self.match_points_to_sectors(df_divi)
         self.df_setor_censitario.CO_UNIDADE_UBS = self.df_setor_censitario.CO_UNIDADE_UBS.fillna(0)
@@ -144,9 +141,9 @@ class ScenarioDataBuilder():
         return df
 
     def read_and_format_path_equipes_PHC(self):
-        dict_municipio_CODIGO = {"Lagoa Santa": 313760, "Belo Horizonte": 310620, "Contagem": 311860, "Divinopolis": 312230, "Montes Claros": 314330}
+        code_mun = self.code_mun.get(self.configuration_data.municipio)
         df = pd.read_excel(self.path_arquivos_data.path_equipes_PHC)
-        df = df[df.CO_MUNICIPIO_GESTOR == dict_municipio_CODIGO[self.configuration_data.municipio]][["CO_UNIDADE", "TP_EQUIPE", "CO_CNES"]].reset_index(drop=True) #TODO: USAR O MUNICIPIO GESTOR SEM HARDCODE
+        df = df[df.CO_MUNICIPIO_GESTOR == code_mun][["CO_UNIDADE", "TP_EQUIPE", "CO_CNES"]].reset_index(drop=True) #TODO: USAR O MUNICIPIO GESTOR SEM HARDCODE
         df = self.complete_CO_unidade(df)
         df_pivot = (
                     df
@@ -354,8 +351,7 @@ class ScenarioDataBuilder():
 
 
     def read_and_format_poligon_coordinates_SC(self):
-        path_coordenadas = r"C:\aps\GeraDadosAPS\Dados\Dados_todos_municipios\dados_SC_fonte_completa.xlsx"
-        df = pd.read_excel(path_coordenadas)
+        df = pd.read_excel(self.path_arquivos_data.path_dados_poligonos_setor_censitario)
         df['CD_SETOR'] = df['CD_SETOR'].str[:-1].astype(int)
         self.df_setor_censitario = self.df_setor_censitario.merge(df[["CD_SETOR", "coordinates"]], 
         left_on="SETOR", right_on="CD_SETOR", how="left")

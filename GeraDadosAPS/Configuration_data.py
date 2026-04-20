@@ -10,11 +10,7 @@ class ExecutionDataType(Enum):
 @dataclass
 class ConfigurationDataScenario:
     municipio: str
-    budget: float or int
-    I_L1: float or int # O que é isso ?
-    I_L1_exp: float or int
     raios_criticos: dict
-    custos_mensais_PHC:dict
     custos_mensais_SHC:dict
     custos_mensais_THC:dict
     equipes_saude_primario: list
@@ -45,6 +41,8 @@ class PathArquivoDados:
     path_dados_custo: str = None
     path_result_optimization: str = None
     path_nome_relatorio_convertido: str = None
+    path_dados_poligonos_setor_censitario: str = None
+    path_dados_UBS: str = None
 
 
 

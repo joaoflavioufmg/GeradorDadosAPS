@@ -15,6 +15,7 @@ class CreatorDatFiles():
         self.path_arquivos_data = path_arquivos_data
         self.texts_variables = list()
         self.create_distance_file = create_distance_file
+        self.code_mun ={"Lagoa Santa": 313760, "Divinopolis": 312230, "Montes Claros": 314330, "Belo Horizonte": 310620, "Contagem": 311860}
     
 
 
@@ -24,7 +25,8 @@ class CreatorDatFiles():
         data_formatter = ScenarioDataBuilder(
             self.configuration_data,
             self.path_arquivos_data,
-            self.create_distance_file
+            self.create_distance_file,
+            self.code_mun
         )
         scenario_data = data_formatter.build()
 
