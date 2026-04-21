@@ -320,6 +320,7 @@ class ScenarioDataBuilder():
             df_CL = pd.read_excel(self.path_arquivos_data.path_locais_candidatos, sheet_name="Candidatos Finais")
         self.df_CL = df_CL[["id_setor"]]
 
+
     def read_and_format_costs_data(self):
         df = pd.read_excel(self.path_arquivos_data.path_dados_custo)
         self.df_custos = df[df.Municipio == self.configuration_data.municipio]
@@ -355,6 +356,20 @@ class ScenarioDataBuilder():
         df['CD_SETOR'] = df['CD_SETOR'].str[:-1].astype(int)
         self.df_setor_censitario = self.df_setor_censitario.merge(df[["CD_SETOR", "coordinates"]], 
         left_on="SETOR", right_on="CD_SETOR", how="left")
+
+    
+    def merge_CL_in_SC_data(self):
+        def create_fake_Candidate_ID(is_CL, sc, cnes):
+            if is_CL == True:
+                return f"CL_{sc}"
+            return cnes
+
+
+
+        is_cl = [i in self.df_CL.id_setor.to_list() for i in self.df_setor_censitario.SETOR]
+        self.df_setor_censitario["IS_CL"] = is_cl
+        self.df_setor_censitario["CO_UNIDADE_UBS"] = self.df_setor_censitario.apply(lambda x: create_fake_Candidate_ID(x.IS_CL, x.SETOR, x.CO_UNIDADE_UBS), axis=1 )
+
 
     def build(self):
         self.read_and_format_path_arquivo_setores_censitarios()
@@ -393,19 +408,19 @@ class ScenarioDataBuilder():
                     "df_dados_custos_e_orcamento": self.df_custos}
 
         else:
-            dist_PHC_SC = None
-            dist_SC_SC = None
+            dist_SC_PHC = None
+            dist_Exist_PHC_to_all_PHC = None
+            self.merge_CL_in_SC_data()
             if self.create_distance_data:
                 distance_data_creator = DistanceAPICalculatorBySC(
                                                             self.path_arquivos_data.path_json_distances,
                                                             self.df_setor_censitario,
                                                             "lala"  )
                                                             
-                #TODO MASTER: LEMBRAR QUE AS DISTANCIAS PRECISAM SER DO SETOR CENSITARIO PARA TODOS OS PHCS E PHCS E PHCS
-                dist_PHC_SC, dist_SC_SC =  distance_data_creator.build() 
+                dist_SC_PHC, dist_Exist_PHC_to_all_PHC =  distance_data_creator.build() 
 
             return {"dfs": self.df_setor_censitario, "configurations": self.configuration_data, "create_distance_data": self.create_distance_data,
-                        "dist_PHC_SC": dist_PHC_SC, "dist_SC_SC": dist_SC_SC}
+                        "dist_SC_PHC": dist_SC_PHC, "dist_Exist_PHC_to_all_PHC": dist_Exist_PHC_to_all_PHC, "df_dados_custos_e_orcamento": self.df_custos}
 
 
 class ResultConverterDataBuilder(ScenarioDataBuilder):

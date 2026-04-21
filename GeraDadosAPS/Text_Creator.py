@@ -375,6 +375,50 @@ class text_messages_creator():
         text = "SHC1	THC1	20000;\n"
         self.texts_variables.append(text)
 
+
+    def create_costs_PHC_teams_text(self):
+        text_doc = (
+            "# Team cost K1 ($/year)\n"
+            "# 		Folha mensal	Encargos	Insumos	Transporte	Supervisão\n"
+            "# eSF	 R$ 1.455.500.00 	50000	45000	7500	3500	5000\n"
+            "# eSB	 R$ 640.420.00 	22000	19800	3300	1540	2200\n"
+            "# eMulti (1/9)	 R$ 611.595.56 	92000	82800	13800	6440	9200\n"
+            "# Fonte: Planilha APS_dados.xlsx\n"
+        )
+
+        header_text = "param CE1:=\n"
+        self.texts_variables.append(text_doc)
+        self.texts_variables.append(header_text)
+        text_esf = " ".join([
+                        str("eSF"),
+                        str(int(round(self.df_custos_e_orcamento.Custo_eSF.iloc[0], 2))),
+                        str("\n")
+                    ])
+    
+        text_esb = " ".join([
+                        str("eSB"),
+                        str(int(round(self.df_custos_e_orcamento.Custo_eSB.iloc[0], 2))),
+                        str("\n")
+                    ])
+
+        text_eMulti = " ".join([
+                        str("eMulti"),
+                        str(int(round(self.df_custos_e_orcamento.Custo_eMulti.iloc[0], 2))),
+                        str("\n")
+                    ])
+
+        text_acs = " ".join([
+                        str("ACS"),
+                        str(int(round(self.df_custos_e_orcamento.Custo_ACS.iloc[0], 2))),
+                        str("\n")
+                    ])
+
+        self.texts_variables.append(text_esf)
+        self.texts_variables.append(text_esb)
+        self.texts_variables.append(text_eMulti)
+        self.texts_variables.append(text_acs)
+
+        self.texts_variables.append(self.dot_vig)
     # def create_PHC_SC_text(self):
     #     text_comment = (
     #         "# Distance matrix between same-level facilities (for team transfer) \n"
@@ -426,9 +470,81 @@ class text_messages_creator():
     #         self.create_distances_text()
 
 
+    def create_basic_heal_care_unit_teams_PHC_text(self):
+        description_text = "# Basic health care units teams (PHC)\n"
+        header_text = "set E[1] :=\n"
+        self.texts_variables.append(description_text)
+        self.texts_variables.append(header_text)
+        for eq in self.scenario_data_config.equipes_saude_primario:
+            text_aux = f"{eq}\n"
+            self.texts_variables.append(text_aux)
         
+        
+        self.texts_variables.append(self.dot_vig)
+    
     #     return self.texts_variables, self.texts_variables_arch_2
 
+    def create_Candidate_locations_text(self):
+        header_text = "set CL[1] :=\n"
+        self.texts_variables.append(header_text)
+        df = self.df_candidates_PHC.copy()
+        for _, row in df.iterrows():
+            text_aux = " ".join([
+                        str(row.CO_UNIDADE),
+                        str("\n")
+                    ])
+            self.texts_variables.append(text_aux)
+        
+        
+        self.texts_variables.append(self.dot_vig)
+
+    def create_SHC_THC_empty_candidate_location(self):
+        set_l1_level = "set L[1] := PHC1;\n"
+        set_l2_level = "set CL[2] := ;\n"
+        set_l3_level = "set CL[3] := ;\n"
+
+        #self.texts_variables.append(set_l1_level)
+        self.texts_variables.append(set_l2_level)
+        self.texts_variables.append(set_l3_level)
+
+    def create_SC_PHC_text(self):
+        header_text = "param D0_1 := \n"
+
+        self.texts_variables_arch_2.append(header_text)
+        for dk in self.dict_dist_SC_PHC:
+            text_aux = " ".join([
+                        str(dk["origem"]),
+                        str(dk["destino"]),
+                        str(dk["distancia"]),
+                        str("\n") 
+                    ])
+
+            self.texts_variables_arch_2.append(text_aux)
+
+
+        self.texts_variables_arch_2.append(self.dot_vig)
+
+    def create_Exist_PHC_to_all_PHC_text(self):
+        text_comment = (
+            "# Distance matrix between same-level facilities (for team transfer) \n"
+            "# {EL[1], L[1]} default 0; # Distance between L1 facilities (min)  \n"
+        )
+        header_text = "param DL1 := \n"
+
+        self.texts_variables_arch_2.append(text_comment)
+        self.texts_variables_arch_2.append(header_text)
+        for dk in self.dict_dist_exist_PHC_all_PHC:
+            text_aux = " ".join([
+                        str(dk["origem"]),
+                        str(dk["destino"]),
+                        str(dk["distancia"]),
+                        str("\n") 
+                    ])
+
+            self.texts_variables_arch_2.append(text_aux)
+
+
+        self.texts_variables_arch_2.append(self.dot_vig)
 
 
 class text_messages_creator_By_SC(text_messages_creator):
@@ -441,8 +557,18 @@ class text_messages_creator_By_SC(text_messages_creator):
         self.dot_vig = ";\n\n"
         self.dict_dist_PHC_SC = scenario_data.get("dist_PHC_SC")
         self.dict_dist_SC_SC = scenario_data.get("dist_SC_SC")
+        self.df_custos_e_orcamento = scenario_data['df_dados_custos_e_orcamento']
+        self.define_EL_and_CL_dataframes()
+        self.dict_dist_exist_PHC_all_PHC = scenario_data.get("dist_Exist_PHC_to_all_PHC")
+        self.dict_dist_SC_PHC = scenario_data.get("dist_SC_PHC")
 
-    
+    def define_EL_and_CL_dataframes(self):
+        self.EL_mask =  [isinstance(i, float) and i > 0 for i in self.scenario_dfs.CO_UNIDADE_UBS]
+        self.CL_mask =  [isinstance(i, str) for i in self.scenario_dfs.CO_UNIDADE_UBS]
+        self.df_exist_PHC = self.scenario_dfs[self.EL_mask]
+        self.df_candidates_PHC = self.scenario_dfs[self.CL_mask]
+        self.df_PHC_EL_plus_EC = self.scenario_dfs[self.EL_mask or self.CL_mask]
+
     def create_SC_SC_text(self):
         header_text = "param D0_1 := \n"
 
@@ -521,17 +647,18 @@ class text_messages_creator_By_SC(text_messages_creator):
         self.texts_variables.append(self.dot_vig)
 
     def create_PHC_teams_text(self):
-        header_text = "param CNES1(tr):	eSF	eSB	eMulti:=\n"
+        header_text = "param CNES1(tr):	eSF	eSB	eMulti ACS:=\n"
         self.texts_variables.append(header_text)
-        df = self.scenario_dfs[self.scenario_dfs.CO_UNIDADE_UBS > 0].copy()
+        df = self.df_PHC_EL_plus_EC.copy()
         for _, row in df.iterrows():
             text_aux = " ".join([
-                        str(row.CO_UNIDADE_UBS),
-                        str(row[70.0]), #TODO: Isso aqui ta bem estranho!
-                        str(row[71.0]),
-                        str(row[74.0]),
-                        str("\n")
-                    ])
+                str(row.CO_UNIDADE),
+                str(int(row.get(70.0, 0))),  # eSF
+                str(int(row.get(71.0, 0))),  # eSB
+                str((row.get(72.0, 0))),  # eMulti
+                str(int(row.get(74.0, 0))),  # ACS
+                str("\n")
+            ])
             self.texts_variables.append(text_aux)
         
         
@@ -564,7 +691,7 @@ class text_messages_creator_By_SC(text_messages_creator):
             text_aux = " ".join([
                         str(row.SETOR),
                         "THC1",
-                        str(25000),
+                        str(35000),
                         str("\n")
                     ])
             self.texts_variables.append(text_aux)
@@ -576,17 +703,17 @@ class text_messages_creator_By_SC(text_messages_creator):
         header_text = "param D1_2:=\n"
         self.texts_variables.append(header_text)
 
-        for _, row in self.scenario_dfs.iterrows():
-            text_aux = " ".join([
-                        str(row.SETOR),
-                        "SHC1",
-                        str(20000),
-                        str("\n")
-                    ])
-            self.texts_variables.append(text_aux)
+        # for _, row in self.scenario_dfs.iterrows():
+        #     text_aux = " ".join([
+        #                 str(row.SETOR),
+        #                 "SHC1",
+        #                 str(20000),
+        #                 str("\n")
+        #             ])
+        #     self.texts_variables.append(text_aux)
 
         #TODO: Ainda acho que isso está errado!
-        for _, row in self.scenario_dfs[self.scenario_dfs.CO_UNIDADE_UBS > 0].iterrows():
+        for _, row in self.df_PHC_EL_plus_EC.iterrows():
             text_aux = " ".join([
                         str(row.CO_UNIDADE_UBS),
                         "SHC1",
@@ -602,17 +729,17 @@ class text_messages_creator_By_SC(text_messages_creator):
         header_text = "param D1_3:=\n"
         self.texts_variables.append(header_text)
 
-        for _, row in self.scenario_dfs.iterrows():
-            text_aux = " ".join([
-                        str(row.SETOR),
-                        "THC1",
-                        str(25000),
-                        str("\n")
-                    ])
-            self.texts_variables.append(text_aux)
+        # for _, row in self.scenario_dfs.iterrows():
+        #     text_aux = " ".join([
+        #                 str(row.SETOR),
+        #                 "THC1",
+        #                 str(25000),
+        #                 str("\n")
+        #             ])
+        #     self.texts_variables.append(text_aux)
 
         #TODO: Ainda acho que isso está errado!
-        for _, row in self.scenario_dfs[self.scenario_dfs.CO_UNIDADE_UBS > 0].iterrows():
+        for _, row in self.df_PHC_EL_plus_EC.iterrows():
             text_aux = " ".join([
                         str(row.CO_UNIDADE_UBS),
                         "THC1",
@@ -623,34 +750,28 @@ class text_messages_creator_By_SC(text_messages_creator):
 
         self.texts_variables.append(self.dot_vig)
 
-    # def create_distance_between_SHC_THC_text(self):
-    #     header_text = "param D2_3:=\n"
+    # def create_costs_PHC_teams_text(self):
+    #     text_doc = (
+    #         "# Team cost K1 ($/year)\n"
+    #         "# 		Folha mensal	Encargos	Insumos	Transporte	Supervisão\n"
+    #         "# eSF	 R$ 1.455.500.00 	50000	45000	7500	3500	5000\n"
+    #         "# eSB	 R$ 640.420.00 	22000	19800	3300	1540	2200\n"
+    #         "# eMulti (1/9)	 R$ 611.595.56 	92000	82800	13800	6440	9200\n"
+    #         "# Fonte: Planilha APS_dados.xlsx\n"
+    #     )
+
+    #     header_text = "param CE1:=\n"
+    #     self.texts_variables.append(text_doc)
     #     self.texts_variables.append(header_text)
-    #     text = "SHC1	THC1	20000;\n"
-    #     self.texts_variables.append(text)
+    #     for eq,vl in self.scenario_data_config.custos_mensais_PHC.items():
+    #         text_aux = " ".join([
+    #                     str(eq),
+    #                     str(vl),
+    #                     str("\n")
+    #                 ])
+    #         self.texts_variables.append(text_aux)
 
-    def create_costs_PHC_teams_text(self):
-        text_doc = (
-            "# Team cost K1 ($/year)\n"
-            "# 		Folha mensal	Encargos	Insumos	Transporte	Supervisão\n"
-            "# eSF	 R$ 1.455.500.00 	50000	45000	7500	3500	5000\n"
-            "# eSB	 R$ 640.420.00 	22000	19800	3300	1540	2200\n"
-            "# eMulti (1/9)	 R$ 611.595.56 	92000	82800	13800	6440	9200\n"
-            "# Fonte: Planilha APS_dados.xlsx\n"
-        )
-
-        header_text = "param CE1:=\n"
-        self.texts_variables.append(text_doc)
-        self.texts_variables.append(header_text)
-        for eq,vl in self.scenario_data_config.custos_mensais_PHC.items():
-            text_aux = " ".join([
-                        str(eq),
-                        str(vl),
-                        str("\n")
-                    ])
-            self.texts_variables.append(text_aux)
-
-        self.texts_variables.append(self.dot_vig)
+    #     self.texts_variables.append(self.dot_vig)
 
     def create_variable_costs_PHC_text(self):
         #Dados ainda nao disponiveis, por isso usei o default 80000
@@ -674,53 +795,90 @@ class text_messages_creator_By_SC(text_messages_creator):
             value_item += 1
         
         self.texts_variables.append(self.dot_vig)
-    
+
     def create_existing_health_care_units_FIRST_level(self):
         header_text = "set EL[1] := \n"
         self.texts_variables.append(header_text)
-        df_base = self.scenario_dfs[self.scenario_dfs.CO_UNIDADE_UBS > 0].copy()
+        df_base = self.df_exist_PHC.copy()
         for _, row in df_base.iterrows():
             text_aux = f"{row.SETOR}\n"
             self.texts_variables.append(text_aux)
 
         self.texts_variables.append(self.dot_vig)
 
-    def create_basic_heal_care_unit_teams_PHC_text(self):
-        description_text = "# Basic health care units teams (PHC)\n"
-        header_text = "set E[1] :=\n"
-        self.texts_variables.append(description_text)
+    def create_variable_costs_PHC_text(self):
+        #Dados ainda nao disponiveis, por isso usei o default 80000
+        comentary_text = ("# # Variable cost of PHC j / patient\n")
+        header_text = "param:	        ITEM1   SIZE	FC1		VC1:=\n"
+        self.texts_variables.append(comentary_text)
         self.texts_variables.append(header_text)
-        for eq in self.scenario_data_config.equipes_saude_primario:
-            text_aux = f"{eq}\n"
+        df_base = self.df_exist_PHC.copy()
+        value_item = 1
+        #setores censitarios que tem PHC #df_candidates_PHC
+        for _, row in df_base.iterrows():
+            text_aux = " ".join([
+                str(row.CO_UNIDADE),
+                str(value_item), #ITEM 1
+                str(int(row.get("PORTE_UBS", 1))), #SIZE
+                #str(int(10)),
+                str(8), #FC1
+                str("."), #VC1
+                str("\n")
+            ])
             self.texts_variables.append(text_aux)
+            value_item += 1
         
+        #Unidades candidatas nao tem capacidade nem tamanho definido!
+        for _, row in self.df_candidates_PHC.iterrows():
+            text_aux = " ".join([
+                str(row.CO_UNIDADE),
+                str(value_item), #ITEM 1
+                str("."), #SIZE
+                str("."), #FC1
+                str("."), #VC1
+                str("\n")
+            ])
+            self.texts_variables.append(text_aux)
+            value_item += 1
         
+
         self.texts_variables.append(self.dot_vig)
-    
+
     def create_mutable_texts_by_SC(self):
         self.create_header_texts() #CLASSE PAI
         self.create_budgtes_text() #CLASSE PAI
         self.create_critical_rad_text() #CLASSE PAI
 
-        self.create_basic_heal_care_unit_teams_SHC_THC_text() #CLASSE PAI
-        self.create_basic_heal_care_unit_teams_PHC_text() #REVISAR e Refazer! classes filhas! - VAMOS TER SO 3 EQUIPES ?
+
+        self.create_basic_heal_care_unit_teams_PHC_text()
         self.create_basic_heal_care_unit_teams_SHC_text() #CLASSE PAI
         self.create_basic_heal_care_unit_teams_THC_text() #CLASSE PAI
-        self.create_existing_health_care_units_FIRST_level() #CLASSE FILHA!
+        
+        
+        self.create_existing_health_care_units_FIRST_level() # TODO: Esse preciso alterar!
         self.create_existing_health_care_units_SECOND_level() #CLASSE PAI 
         self.create_existing_health_care_units_THIRD_level() #CLASSE PAI 
+        
+
+        self.create_Candidate_locations_text()
+        self.create_SHC_THC_empty_candidate_location()
+
+
         self.create_vulnerability_population_table_text()  #CLASSE FILHA!
-        self.create_variable_costs_PHC_text()  #CLASSE FILHA!
+
+
+        self.create_variable_costs_PHC_text()  
         self.create_variable_costs_SHC_text()  #CLASSE PAI 
         self.create_variable_costs_THC_text()  #CLASSE PAI 
 
 
-        self.create_costs_PHC_teams_text() #REVISAR e Refazer! classes filhas! - VAMOS TER SO 3 EQUIPES ?
+        self.create_costs_PHC_teams_text() #
         self.create_costs_SHC_teams_text() #CLASSE PAI
         self.create_costs_THC_teams_text() #CLASSE PAI
         
         #Setor censitario - Pontos
-        self.create_distance_between_SC_PHC_text() #CLASSE FILHA!
+
+        #ARRUMEI AQUI 
         self.create_distance_between_SC_SHC_text() #CLASSE FILHA!
         self.create_distance_between_SC_THC_text() #CLASSE FILHA!
 
@@ -733,7 +891,7 @@ class text_messages_creator_By_SC(text_messages_creator):
 
 
 
-        self.create_PHC_teams_text() #CLASSE FILHA!
+        self.create_PHC_teams_text() #CLASSE FILHA! #NORMALIZAR!
         self.create_SHC_teams_text() #CLASSE PAI
         self.create_THC_teams_text() #CLASSE PAI
 
@@ -776,8 +934,10 @@ class text_messages_creator_By_SC(text_messages_creator):
     def create_distances_text_SC(self):
         self.create_header_text_arch_dist()
         #self.create_SC_set_text()
-        self.create_PHC_SC_text()
-        self.create_SC_SC_text()
+        # self.create_PHC_SC_text()
+        # self.create_SC_SC_text()
+        self.create_Exist_PHC_to_all_PHC_text()
+        self.create_SC_PHC_text()
     
     def create_texts(self):
         self.create_mutable_texts_by_SC()
@@ -943,49 +1103,49 @@ class text_messages_creator_By_Cluster(text_messages_creator):
     #     text = "SHC1	THC1	20000;\n"
     #     self.texts_variables.append(text)
 
-    def create_costs_PHC_teams_text(self):
-        text_doc = (
-            "# Team cost K1 ($/year)\n"
-            "# 		Folha mensal	Encargos	Insumos	Transporte	Supervisão\n"
-            "# eSF	 R$ 1.455.500.00 	50000	45000	7500	3500	5000\n"
-            "# eSB	 R$ 640.420.00 	22000	19800	3300	1540	2200\n"
-            "# eMulti (1/9)	 R$ 611.595.56 	92000	82800	13800	6440	9200\n"
-            "# Fonte: Planilha APS_dados.xlsx\n"
-        )
+    # def create_costs_PHC_teams_text(self):
+    #     text_doc = (
+    #         "# Team cost K1 ($/year)\n"
+    #         "# 		Folha mensal	Encargos	Insumos	Transporte	Supervisão\n"
+    #         "# eSF	 R$ 1.455.500.00 	50000	45000	7500	3500	5000\n"
+    #         "# eSB	 R$ 640.420.00 	22000	19800	3300	1540	2200\n"
+    #         "# eMulti (1/9)	 R$ 611.595.56 	92000	82800	13800	6440	9200\n"
+    #         "# Fonte: Planilha APS_dados.xlsx\n"
+    #     )
 
-        header_text = "param CE1:=\n"
-        self.texts_variables.append(text_doc)
-        self.texts_variables.append(header_text)
-        text_esf = " ".join([
-                        str("eSF"),
-                        str(int(round(self.df_custos_e_orcamento.Custo_eSF.iloc[0], 2))),
-                        str("\n")
-                    ])
+    #     header_text = "param CE1:=\n"
+    #     self.texts_variables.append(text_doc)
+    #     self.texts_variables.append(header_text)
+    #     text_esf = " ".join([
+    #                     str("eSF"),
+    #                     str(int(round(self.df_custos_e_orcamento.Custo_eSF.iloc[0], 2))),
+    #                     str("\n")
+    #                 ])
     
-        text_esb = " ".join([
-                        str("eSB"),
-                        str(int(round(self.df_custos_e_orcamento.Custo_eSB.iloc[0], 2))),
-                        str("\n")
-                    ])
+    #     text_esb = " ".join([
+    #                     str("eSB"),
+    #                     str(int(round(self.df_custos_e_orcamento.Custo_eSB.iloc[0], 2))),
+    #                     str("\n")
+    #                 ])
 
-        text_eMulti = " ".join([
-                        str("eMulti"),
-                        str(int(round(self.df_custos_e_orcamento.Custo_eMulti.iloc[0], 2))),
-                        str("\n")
-                    ])
+    #     text_eMulti = " ".join([
+    #                     str("eMulti"),
+    #                     str(int(round(self.df_custos_e_orcamento.Custo_eMulti.iloc[0], 2))),
+    #                     str("\n")
+    #                 ])
 
-        text_acs = " ".join([
-                        str("ACS"),
-                        str(int(round(self.df_custos_e_orcamento.Custo_ACS.iloc[0], 2))),
-                        str("\n")
-                    ])
+    #     text_acs = " ".join([
+    #                     str("ACS"),
+    #                     str(int(round(self.df_custos_e_orcamento.Custo_ACS.iloc[0], 2))),
+    #                     str("\n")
+    #                 ])
 
-        self.texts_variables.append(text_esf)
-        self.texts_variables.append(text_esb)
-        self.texts_variables.append(text_eMulti)
-        self.texts_variables.append(text_acs)
+    #     self.texts_variables.append(text_esf)
+    #     self.texts_variables.append(text_esb)
+    #     self.texts_variables.append(text_eMulti)
+    #     self.texts_variables.append(text_acs)
 
-        self.texts_variables.append(self.dot_vig)
+    #     self.texts_variables.append(self.dot_vig)
 
     def create_variable_costs_PHC_text(self):
         #Dados ainda nao disponiveis, por isso usei o default 80000
@@ -1035,17 +1195,17 @@ class text_messages_creator_By_Cluster(text_messages_creator):
 
         self.texts_variables.append(self.dot_vig)
 
-    def create_basic_heal_care_unit_teams_PHC_text(self):
-        description_text = "# Basic health care units teams (PHC)\n"
-        header_text = "set E[1] :=\n"
-        self.texts_variables.append(description_text)
-        self.texts_variables.append(header_text)
-        for eq in self.scenario_data_config.equipes_saude_primario:
-            text_aux = f"{eq}\n"
-            self.texts_variables.append(text_aux)
+    # def create_basic_heal_care_unit_teams_PHC_text(self):
+    #     description_text = "# Basic health care units teams (PHC)\n"
+    #     header_text = "set E[1] :=\n"
+    #     self.texts_variables.append(description_text)
+    #     self.texts_variables.append(header_text)
+    #     for eq in self.scenario_data_config.equipes_saude_primario:
+    #         text_aux = f"{eq}\n"
+    #         self.texts_variables.append(text_aux)
         
         
-        self.texts_variables.append(self.dot_vig)
+    #     self.texts_variables.append(self.dot_vig)
     
     def create_vulnerability_population_table_text(self):
         doc_text = (
@@ -1090,28 +1250,28 @@ class text_messages_creator_By_Cluster(text_messages_creator):
         self.texts_variables.append(self.dot_vig)
 
         
-    def create_Candidate_locations_text(self):
-        header_text = "set CL[1] :=\n"
-        self.texts_variables.append(header_text)
-        df = self.df_candidates_PHC.copy()
-        for _, row in df.iterrows():
-            text_aux = " ".join([
-                        str(row.CO_UNIDADE),
-                        str("\n")
-                    ])
-            self.texts_variables.append(text_aux)
+    # def create_Candidate_locations_text(self):
+    #     header_text = "set CL[1] :=\n"
+    #     self.texts_variables.append(header_text)
+    #     df = self.df_candidates_PHC.copy()
+    #     for _, row in df.iterrows():
+    #         text_aux = " ".join([
+    #                     str(row.CO_UNIDADE),
+    #                     str("\n")
+    #                 ])
+    #         self.texts_variables.append(text_aux)
         
         
-        self.texts_variables.append(self.dot_vig)
+    #     self.texts_variables.append(self.dot_vig)
 
-    def create_SHC_THC_empty_candidate_location(self):
-        set_l1_level = "set L[1] := PHC1;\n"
-        set_l2_level = "set CL[2] := ;\n"
-        set_l3_level = "set CL[3] := ;\n"
+    # def create_SHC_THC_empty_candidate_location(self):
+    #     set_l1_level = "set L[1] := PHC1;\n"
+    #     set_l2_level = "set CL[2] := ;\n"
+    #     set_l3_level = "set CL[3] := ;\n"
 
-        #self.texts_variables.append(set_l1_level)
-        self.texts_variables.append(set_l2_level)
-        self.texts_variables.append(set_l3_level)
+    #     #self.texts_variables.append(set_l1_level)
+    #     self.texts_variables.append(set_l2_level)
+    #     self.texts_variables.append(set_l3_level)
 
     def create_mutable_texts_by_cluster(self):
         self.create_header_texts() #CLASSE PAI
@@ -1170,44 +1330,44 @@ class text_messages_creator_By_Cluster(text_messages_creator):
         self.create_percentual_max_teleatend_text()    #CLASSE PAI!
         self.create_percentual_max_deslocamento_text()  #CLASSE PAI!
 
-    def create_SC_PHC_text(self):
-        header_text = "param D0_1 := \n"
+    # def create_SC_PHC_text(self):
+    #     header_text = "param D0_1 := \n"
 
-        self.texts_variables_arch_2.append(header_text)
-        for dk in self.dict_dist_SC_PHC:
-            text_aux = " ".join([
-                        str(dk["origem"]),
-                        str(dk["destino"]),
-                        str(dk["distancia"]),
-                        str("\n") 
-                    ])
+    #     self.texts_variables_arch_2.append(header_text)
+    #     for dk in self.dict_dist_SC_PHC:
+    #         text_aux = " ".join([
+    #                     str(dk["origem"]),
+    #                     str(dk["destino"]),
+    #                     str(dk["distancia"]),
+    #                     str("\n") 
+    #                 ])
 
-            self.texts_variables_arch_2.append(text_aux)
-
-
-        self.texts_variables_arch_2.append(self.dot_vig)
-
-    def create_Exist_PHC_to_all_PHC_text(self):
-        text_comment = (
-            "# Distance matrix between same-level facilities (for team transfer) \n"
-            "# {EL[1], L[1]} default 0; # Distance between L1 facilities (min)  \n"
-        )
-        header_text = "param DL1 := \n"
-
-        self.texts_variables_arch_2.append(text_comment)
-        self.texts_variables_arch_2.append(header_text)
-        for dk in self.dict_dist_exist_PHC_all_PHC:
-            text_aux = " ".join([
-                        str(dk["origem"]),
-                        str(dk["destino"]),
-                        str(dk["distancia"]),
-                        str("\n") 
-                    ])
-
-            self.texts_variables_arch_2.append(text_aux)
+    #         self.texts_variables_arch_2.append(text_aux)
 
 
-        self.texts_variables_arch_2.append(self.dot_vig)
+    #     self.texts_variables_arch_2.append(self.dot_vig)
+
+    # def create_Exist_PHC_to_all_PHC_text(self):
+    #     text_comment = (
+    #         "# Distance matrix between same-level facilities (for team transfer) \n"
+    #         "# {EL[1], L[1]} default 0; # Distance between L1 facilities (min)  \n"
+    #     )
+    #     header_text = "param DL1 := \n"
+
+    #     self.texts_variables_arch_2.append(text_comment)
+    #     self.texts_variables_arch_2.append(header_text)
+    #     for dk in self.dict_dist_exist_PHC_all_PHC:
+    #         text_aux = " ".join([
+    #                     str(dk["origem"]),
+    #                     str(dk["destino"]),
+    #                     str(dk["distancia"]),
+    #                     str("\n") 
+    #                 ])
+
+    #         self.texts_variables_arch_2.append(text_aux)
+
+
+    #     self.texts_variables_arch_2.append(self.dot_vig)
 
     def create_distances_text_by_cluster(self):
         self.create_header_text_arch_dist()

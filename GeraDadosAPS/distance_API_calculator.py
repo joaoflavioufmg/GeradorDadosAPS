@@ -171,14 +171,15 @@ class DistanceAPICalculatorBySC(DistanceAPICalculator):
         SC_id = self.df_setor_censitario.SETOR.to_list()
         SC_lat = self.df_setor_censitario.LAT.to_list()
         SC_long = self.df_setor_censitario.LONG.to_list()
-        df_UBS = self.df_setor_censitario[self.df_setor_censitario.CO_UNIDADE_UBS > 0 ]
+        df_UBS_mask =  [isinstance(i, str) or i > 0 for i in self.df_setor_censitario.CO_UNIDADE_UBS]
+        df_UBS =  self.df_setor_censitario[df_UBS_mask]
         PHC_id = df_UBS.SETOR.to_list()
         PHC_lat = df_UBS.LAT.to_list()
         PHC_long = df_UBS.LONG.to_list()
         origin_dest_pairs = {}
-
-        for o_id, o_lat, o_long in zip(PHC_id, PHC_lat, PHC_long):
-            for d_id, d_lat, d_long in zip(SC_id, SC_lat, SC_long):
+        # (PHC_id, PHC_lat, PHC_long)  e (SC_id, SC_lat, SC_long)
+        for o_id, o_lat, o_long in zip(SC_id, SC_lat, SC_long):
+            for d_id, d_lat, d_long in zip(PHC_id, PHC_lat, PHC_long):
                 origin_dest_pairs[(o_id, d_id)] = {
                     "origin": {
                         "id": o_id,
@@ -196,13 +197,23 @@ class DistanceAPICalculatorBySC(DistanceAPICalculator):
         self.origin_dest_PHC_SC = origin_dest_pairs
 
 
-    def create_origin_dest_SC_to_SC(self):
+    def create_origin_dest_Exist_PHC_to_SC(self):
         SC_id = self.df_setor_censitario.SETOR.to_list()
         SC_lat = self.df_setor_censitario.LAT.to_list()
         SC_long = self.df_setor_censitario.LONG.to_list()
         origin_dest_pairs = {}
+        #como saber qual o setor é existente?
+        #self.df_setor_censitario[self.df_setor_censitario.CO_UNIDADE_UBS > 0].CO_UNIDADE_UBS.iloc[0]
 
-        for o_id, o_lat, o_long in zip(SC_id, SC_lat, SC_long):
+        #Aqui precisa ser: Unidades reais e Setores censitrarios
+        exist_PHC_unds = [isinstance(i, float) and i > 0 for i in self.df_setor_censitario.CO_UNIDADE_UBS]
+
+        df_UBS =  self.df_setor_censitario[exist_PHC_unds]
+        PHC_id = df_UBS.SETOR.to_list()
+        PHC_lat = df_UBS.LAT.to_list()
+        PHC_long = df_UBS.LONG.to_list()
+        
+        for o_id, o_lat, o_long in zip(PHC_id, PHC_lat, PHC_long):
             for d_id, d_lat, d_long in zip(SC_id, SC_lat, SC_long):
                 origin_dest_pairs[(o_id, d_id)] = {
                     "origin": {
@@ -218,7 +229,7 @@ class DistanceAPICalculatorBySC(DistanceAPICalculator):
                 }
 
         # guarda no objeto para uso posterior
-        self.origin_dest_SC_to_SC = origin_dest_pairs
+        self.origin_dest_Exist_PHC_to_SC = origin_dest_pairs
 
 
     def read_and_format_json(self):
@@ -239,10 +250,15 @@ class DistanceAPICalculatorBySC(DistanceAPICalculator):
     def build(self):
         self.create_origin_dest_PHC_SC()
         "ATENCAO: TEM UM ERRO AQUI! - CHECAR SE PRECISO DAS DISTANCIAS ENTRE TODOS OS SETORES CENSITARIOS!"
-        self.create_origin_dest_SC_to_SC()
-        self.read_and_format_json()
+        self.create_origin_dest_Exist_PHC_to_SC()
+        #self.read_and_format_json()
         dist_PHC_SC, setores_sem_distancia_PHC = self.get_distances(self.origin_dest_PHC_SC)
-        dist_SC_SC, setores_sem_distancia_SC = self.get_distances(self.origin_dest_SC_to_SC)
+        dist_SC_SC, setores_sem_distancia_SC = self.get_distances(self.origin_dest_Exist_PHC_to_SC)
+        
+
+        #Preciso das distancias entre:
+            # dist_SC_PHC (origem: setor censitario - destino: todas as unidades PHC)
+            # dist_Exist_PHC_to_all_PHC
         
         return dist_PHC_SC, dist_SC_SC
 
