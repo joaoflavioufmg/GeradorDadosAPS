@@ -98,7 +98,8 @@ class ScenarioDataBuilder():
         df["SETOR"] =  pd.to_numeric(df["SETOR"], errors="coerce") 
 
 
-        df["V01006"] = df["V01006"].apply(lambda x: 0 if isinstance(x, str) else x)
+        # df["V01006"] = df["V01006"].apply(lambda x: 0 if isinstance(x, str) else x)
+        df["V01006"] = pd.to_numeric(df["V01006"], errors="coerce").fillna(0).astype(int) 
         self.df_setor_censitario = df[["MUNICIPIO", "SETOR", "V01006", "LAT", "LONG"]].copy()
 
     

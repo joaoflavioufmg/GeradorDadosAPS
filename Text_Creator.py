@@ -372,7 +372,7 @@ class text_messages_creator():
     def create_distance_between_SHC_THC_text(self):
         header_text = "param D2_3:=\n"
         self.texts_variables.append(header_text)
-        text = "SHC1	THC1	20000;\n"
+        text = "SHC1	THC1	20000;\n\n"
         self.texts_variables.append(text)
 
 
@@ -447,8 +447,8 @@ class text_messages_creator():
         self.texts_variables_arch_2.append(header_text)
         for dk in self.dict_dist_SC_SC:
             text_aux = " ".join([
-                        str(dk["origem"]),
-                        str(dk["destino"]),
+                        str(dk["origem"]).rstrip('.0'),
+                        str(dk["destino"]).rstrip('.0'),
                         str(dk["distancia"]),
                         str("\n") 
                     ])
@@ -489,11 +489,13 @@ class text_messages_creator():
         self.texts_variables.append(header_text)
         df = self.df_candidates_PHC.copy()
         for _, row in df.iterrows():
-            text_aux = " ".join([
-                        str(row.CO_UNIDADE),
-                        str("\n")
-                    ])
-            self.texts_variables.append(text_aux)
+            value = row.CO_UNIDADE
+            if value != 0 and value != 0.0:  # Filter out zero values
+                text_aux = " ".join([
+                            str(row.CO_UNIDADE).rstrip('.0'),
+                            str("\n")
+                        ])
+                self.texts_variables.append(text_aux)
         
         
         self.texts_variables.append(self.dot_vig)
@@ -513,8 +515,8 @@ class text_messages_creator():
         self.texts_variables_arch_2.append(header_text)
         for dk in self.dict_dist_SC_PHC:
             text_aux = " ".join([
-                        str(dk["origem"]),
-                        str(dk["destino"]),
+                        str(dk["origem"]).rstrip('.0'),
+                        str(dk["destino"]).rstrip('.0'),
                         str(dk["distancia"]),
                         str("\n") 
                     ])
@@ -535,9 +537,9 @@ class text_messages_creator():
         self.texts_variables_arch_2.append(header_text)
         for dk in self.dict_dist_exist_PHC_all_PHC:
             text_aux = " ".join([
-                        str(dk["origem"]),
-                        str(dk["destino"]),
-                        str(dk["distancia"]),
+                        str(dk["origem"]).rstrip('.0'),
+                        str(dk["destino"]).rstrip('.0'),
+                        str(dk["distancia"]).rstrip('.0'),
                         str("\n") 
                     ])
 
@@ -575,8 +577,8 @@ class text_messages_creator_By_SC(text_messages_creator):
         self.texts_variables_arch_2.append(header_text)
         for dk in self.dict_dist_SC_SC:
             text_aux = " ".join([
-                        str(dk["origem"]),
-                        str(dk["destino"]),
+                        str(dk["origem"]).rstrip('.0'),
+                        str(dk["destino"]).rstrip('.0'),
                         str(dk["distancia"]),
                         str("\n") 
                     ])
@@ -597,9 +599,9 @@ class text_messages_creator_By_SC(text_messages_creator):
         self.texts_variables_arch_2.append(header_text)
         for dk in self.dict_dist_PHC_SC:
             text_aux = " ".join([
-                        str(dk["origem"]),
-                        str(dk["destino"]),
-                        str(dk["distancia"]),
+                        str(dk["origem"]).rstrip('.0'),
+                        str(dk["destino"]).rstrip('.0'),
+                        str(dk["distancia"]).rstrip('.0'),
                         str("\n") 
                     ])
 
@@ -620,7 +622,7 @@ class text_messages_creator_By_SC(text_messages_creator):
 
         for _, row in self.scenario_dfs.iterrows():
             text_aux = " ".join([
-                        str(row.SETOR),
+                        str(row.SETOR).rstrip('.0'),
                         str(row.V01006),
                         str(row["Índice"]),
                         str("\n")
@@ -635,7 +637,7 @@ class text_messages_creator_By_SC(text_messages_creator):
         df = self.scenario_dfs.copy()
         for _, row in df.iterrows():
             text_aux = " ".join([
-                        str(row.SETOR),
+                        str(row.SETOR).rstrip('.0'),
                         str(self.scenario_data_config.encaminhamentos_primeiro_nivel["1"]), #TODO: Isso aqui ta bem estranho!
                         str(self.scenario_data_config.encaminhamentos_primeiro_nivel["2"]),
                         str(self.scenario_data_config.encaminhamentos_primeiro_nivel["3"]),
@@ -652,7 +654,7 @@ class text_messages_creator_By_SC(text_messages_creator):
         df = self.df_PHC_EL_plus_EC.copy()
         for _, row in df.iterrows():
             text_aux = " ".join([
-                str(row.CO_UNIDADE),
+                str(row.CO_UNIDADE).rstrip('.0'),
                 str(int(row.get(70.0, 0))),  # eSF
                 str(int(row.get(71.0, 0))),  # eSB
                 str((row.get(72.0, 0))),  # eMulti
@@ -674,7 +676,7 @@ class text_messages_creator_By_SC(text_messages_creator):
 
         for _, row in self.scenario_dfs.iterrows():
             text_aux = " ".join([
-                        str(row.SETOR),
+                        str(row.SETOR).rstrip('.0'),
                         "SHC1",
                         str(20000),
                         str("\n")
@@ -689,7 +691,7 @@ class text_messages_creator_By_SC(text_messages_creator):
 
         for _, row in self.scenario_dfs.iterrows():
             text_aux = " ".join([
-                        str(row.SETOR),
+                        str(row.SETOR).rstrip('.0'),
                         "THC1",
                         str(35000),
                         str("\n")
@@ -715,7 +717,7 @@ class text_messages_creator_By_SC(text_messages_creator):
         #TODO: Ainda acho que isso está errado!
         for _, row in self.df_PHC_EL_plus_EC.iterrows():
             text_aux = " ".join([
-                        str(row.CO_UNIDADE_UBS),
+                        str(row.CO_UNIDADE_UBS).rstrip('.0'),
                         "SHC1",
                         str(20000),
                         str("\n")
@@ -741,7 +743,7 @@ class text_messages_creator_By_SC(text_messages_creator):
         #TODO: Ainda acho que isso está errado!
         for _, row in self.df_PHC_EL_plus_EC.iterrows():
             text_aux = " ".join([
-                        str(row.CO_UNIDADE_UBS),
+                        str(row.CO_UNIDADE_UBS).rstrip('.0'),
                         "THC1",
                         str(25000),
                         str("\n")
@@ -801,7 +803,8 @@ class text_messages_creator_By_SC(text_messages_creator):
         self.texts_variables.append(header_text)
         df_base = self.df_exist_PHC.copy()
         for _, row in df_base.iterrows():
-            text_aux = f"{row.SETOR}\n"
+            # text_aux = f"{row.SETOR}\n"
+            text_aux = f"{str(row.SETOR).rstrip('.0')}\n"
             self.texts_variables.append(text_aux)
 
         self.texts_variables.append(self.dot_vig)
@@ -920,9 +923,9 @@ class text_messages_creator_By_SC(text_messages_creator):
         self.texts_variables_arch_2.append(header_text)
         for dk in self.dict_dist_PHC_SC:
             text_aux = " ".join([
-                        str(dk["origem"]),
-                        str(dk["destino"]),
-                        str(dk["distancia"]),
+                        str(dk["origem"]).rstrip('.0'),
+                        str(dk["destino"]).rstrip('.0'),
+                        str(dk["distancia"]).rstrip('.0'),
                         str("\n") 
                     ])
 
@@ -972,7 +975,7 @@ class text_messages_creator_By_Cluster(text_messages_creator):
         df = self.df_exist_PHC.copy()
         for _, row in df.iterrows():
             text_aux = " ".join([
-                        str(row.CO_UNIDADE),
+                        str(row.CO_UNIDADE).rstrip('.0'),
                         str(self.scenario_data_config.encaminhamentos_primeiro_nivel["1"]), #TODO: Isso aqui ta bem estranho!
                         str(self.scenario_data_config.encaminhamentos_primeiro_nivel["2"]),
                         str(self.scenario_data_config.encaminhamentos_primeiro_nivel["3"]),
@@ -1190,7 +1193,8 @@ class text_messages_creator_By_Cluster(text_messages_creator):
         self.texts_variables.append(header_text)
         df_base = self.df_exist_PHC
         for _, row in df_base.iterrows():
-            text_aux = f"{row.CO_UNIDADE}\n"
+            # text_aux = f"{row.CO_UNIDADE}\n"
+            text_aux = f"{str(row.CO_UNIDADE).rstrip('.0')}\n"
             self.texts_variables.append(text_aux)
 
         self.texts_variables.append(self.dot_vig)
