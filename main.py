@@ -15,6 +15,7 @@ PASTAS = {
 }   
 
 if __name__ == "__main__":
+    #TESTE JOAO
     municipio = MUNCIPIO
     dados_setor_censitario_completo = r"dados_censo_FINAL_reduzido.csv"
     tipo_dos_dados = ExecutionDataType.BY_SETOR_CENSITARIO
