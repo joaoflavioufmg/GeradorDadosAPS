@@ -786,7 +786,7 @@ class text_messages_creator_By_SC(text_messages_creator):
         #setores censitarios que tem PHC 
         for _, row in df_base.iterrows():
             text_aux = " ".join([
-                str(row.SETOR),
+                str(row.SETOR).rstrip('.0'),
                 str(value_item), #ITEM 1
                 str(1), #SIZE
                 str(80000), #FC1
@@ -820,7 +820,7 @@ class text_messages_creator_By_SC(text_messages_creator):
         #setores censitarios que tem PHC #df_candidates_PHC
         for _, row in df_base.iterrows():
             text_aux = " ".join([
-                str(row.CO_UNIDADE),
+                str(row.CO_UNIDADE).rstrip('.0'),
                 str(value_item), #ITEM 1
                 str(int(row.get("PORTE_UBS", 1))), #SIZE
                 #str(int(10)),
@@ -1161,7 +1161,7 @@ class text_messages_creator_By_Cluster(text_messages_creator):
         #setores censitarios que tem PHC #df_candidates_PHC
         for _, row in df_base.iterrows():
             text_aux = " ".join([
-                str(row.CO_UNIDADE),
+                str(row.CO_UNIDADE).rstrip('.0'),
                 str(value_item), #ITEM 1
                 str(int(row.get("PORTE_UBS", 1))), #SIZE
                 #str(int(10)),
