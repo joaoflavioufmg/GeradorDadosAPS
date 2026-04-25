@@ -489,13 +489,11 @@ class text_messages_creator():
         self.texts_variables.append(header_text)
         df = self.df_candidates_PHC.copy()
         for _, row in df.iterrows():
-            value = row.CO_UNIDADE
-            if value != 0 and value != 0.0:  # Filter out zero values
-                text_aux = " ".join([
-                            str(row.CO_UNIDADE).rstrip('.0'),
-                            str("\n")
-                        ])
-                self.texts_variables.append(text_aux)
+            text_aux = " ".join([
+                        str(row.CO_UNIDADE_UBS).rstrip('.0'),
+                        str("\n")
+                    ])
+            self.texts_variables.append(text_aux)
         
         
         self.texts_variables.append(self.dot_vig)
@@ -834,7 +832,7 @@ class text_messages_creator_By_SC(text_messages_creator):
         #Unidades candidatas nao tem capacidade nem tamanho definido!
         for _, row in self.df_candidates_PHC.iterrows():
             text_aux = " ".join([
-                str(row.CO_UNIDADE),
+                str(row.CO_UNIDADE_UBS),
                 str(value_item), #ITEM 1
                 str("."), #SIZE
                 str("."), #FC1
@@ -986,7 +984,7 @@ class text_messages_creator_By_Cluster(text_messages_creator):
         
         for _, row in  self.df_candidates_PHC.iterrows():
             text_aux = " ".join([
-                        str(row.CO_UNIDADE),
+                        str(row.CO_UNIDADE_UBS),
                         str(self.scenario_data_config.encaminhamentos_primeiro_nivel["1"]), #TODO: Isso aqui ta bem estranho!
                         str(self.scenario_data_config.encaminhamentos_primeiro_nivel["2"]),
                         str(self.scenario_data_config.encaminhamentos_primeiro_nivel["3"]),
