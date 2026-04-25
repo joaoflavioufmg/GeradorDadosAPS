@@ -94,13 +94,13 @@ class ScenarioDataBuilder():
         df["LAT"] = df['LAT'].apply(parse_lat_lon)
         df["LONG"] = df['LONG'].apply(parse_lat_lon)
         df = df.drop(columns= ["SETOR"])
-        df = df.rename(columns={"MUNICIPIO": "MUNICIPIO", "LAT": "LAT", "LONG": "LONG", "CD_setor_norm":"SETOR"})
-        df["SETOR"] =  pd.to_numeric(df["SETOR"], errors="coerce") 
+        df = df.rename(columns={"MUNICIPIO": "MUNICIPIO", "LAT": "LAT", "LONG": "LONG", "CD_setor_norm":"SETOR", 'Índice': "Indice"})
+        df["SETOR"] =  pd.to_numeric(df["SETOR"], errors="coerce").fillna(0).astype(int) 
 
 
         # df["V01006"] = df["V01006"].apply(lambda x: 0 if isinstance(x, str) else x)
         df["V01006"] = pd.to_numeric(df["V01006"], errors="coerce").fillna(0).astype(int) 
-        self.df_setor_censitario = df[["MUNICIPIO", "SETOR", "V01006", "LAT", "LONG"]].copy()
+        self.df_setor_censitario = df[["MUNICIPIO", "SETOR", "V01006", "LAT", "LONG", "Indice"]].copy()
 
     
     def read_and_format_path_setores_com_UBS(self):
@@ -376,7 +376,6 @@ class ScenarioDataBuilder():
         self.read_and_format_path_arquivo_setores_censitarios()
         self.read_and_format_poligon_coordinates_SC()
         self.read_and_format_path_setores_com_UBS()
-        self.read_and_format_dados_IVS()
         self.read_and_format_path_equipes_PHC()
         self.read_and_format_SIZE_PHC()
         self.read_and_format_CL()

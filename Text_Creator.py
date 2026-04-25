@@ -624,7 +624,7 @@ class text_messages_creator_By_SC(text_messages_creator):
             text_aux = " ".join([
                         str(row.SETOR).rstrip('.0'),
                         str(row.V01006),
-                        str(row["Índice"]),
+                        str(row["Indice"]),
                         str("\n")
                     ])
             self.texts_variables.append(text_aux)
