@@ -9,7 +9,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DADOS_DIR = os.path.join(BASE_DIR, "Dados")
 MUNCIPIO = "Lagoa Santa"    #["Divinopolis, "#"Montes Claros" #"Lagoa Santa", "Contagem", "Belo Horizonte"]
 PASTAS = {
-    'todos_municipios': os.path.join(DADOS_DIR, "Dados_todos_municipios"),
+    'todos_municipios': DADOS_DIR,
+    # os.path.join(DADOS_DIR, "Dados_todos_municipios"),
     MUNCIPIO: os.path.join(DADOS_DIR, f"{MUNCIPIO}/dados_brutos")
 }   
 
@@ -52,7 +53,7 @@ if __name__ == "__main__":
         path_locais_candidatos = os.path.join(PASTAS["todos_municipios"], f"selecao_candidatos_final_{municipio}.xlsx"), 
         path_dados_custo = os.path.join(PASTAS['todos_municipios'], "Dados_custos_finais_formatados.xlsx"), 
         path_result_optimization = None,
-        path_nome_relatorio_convertido = f"C:\aps\Resultado_{municipio}_CLUSTER_convertido_para_SC.xlsx",
+        path_nome_relatorio_convertido = f"Resultado_{municipio}_CLUSTER_convertido_para_SC.xlsx",
         path_dados_poligonos_setor_censitario = os.path.join(PASTAS['todos_municipios'], "dados_SC_fonte_completa.xlsx"),
         path_dados_UBS = os.path.join(PASTAS['todos_municipios'], "v01_UBS.xlsx")
     )

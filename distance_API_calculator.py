@@ -103,7 +103,7 @@ class DistanceAPICalculator:
                 dist = self._get_cached_distance(sc_origem, sc_destino)
 
                 if dist is None:
-                    print(f"fallback_{sc_origem}_{sc_destino}")
+                    # print(f"fallback_{sc_origem}_{sc_destino}")
                     setores_sem_distancias.append(sc_origem)
                     dist = self._fetch_distance_with_fallback(dt)
 
@@ -130,7 +130,7 @@ class DistanceAPICalculator:
 
         raio_terra_m = 6371000  # raio médio da Terra em metros
         distancia_m = raio_terra_m * c
-        print("usando distancia haversine!")
+        # print("usando distancia haversine!")
         return int(distancia_m)
 
     def get_distance_in_API(self, dados_og):

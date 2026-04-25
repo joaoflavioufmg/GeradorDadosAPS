@@ -24,7 +24,8 @@ class ConfigurationDataScenario:
     maximo_atendimentos_telemedicina:dict
     maximo_deslocamento: dict
     name_output_file_distancias: str
-    tipo_rodada: ExecutionDataType = ExecutionDataType.BY_CLUSTER
+    # tipo_rodada: ExecutionDataType = ExecutionDataType.BY_CLUSTER
+    tipo_rodada: ExecutionDataType = ExecutionDataType.BY_SETOR_CENSITARIO
 
 
 @dataclass
